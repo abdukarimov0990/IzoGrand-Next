@@ -3,6 +3,11 @@ const { Telegraf, Scenes, session } = require('telegraf');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const mongoose = require('mongoose');
+
+// MongoDB modellari
+const Product = require('./models/Product');
+const Work = require('./models/Work');
 
 // Bot token
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -13,10 +18,8 @@ let adminIds = process.env.ADMINS?.split(',').map(id => id.trim()) || [];
 // 🔧 Kataloglar
 const publicDir = path.join(__dirname, '..', 'public');
 const imgDir = path.join(publicDir, 'img');
-const dataDir = path.join(__dirname, 'src', 'data');
 
-// Papkalarni yaratish
-[publicDir, imgDir, dataDir].forEach(dir => {
+[publicDir, imgDir].forEach(dir => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
@@ -100,63 +103,38 @@ const addScene = new Scenes.WizardScene(
     if (!ctx.message?.text) return ctx.reply("❗ Tavsif matnini yuboring.");
     ctx.wizard.state.desc = ctx.message.text;
 
-    const filePath = path.join(dataDir, 'data.js');
-    let products = [], works = [];
-
     try {
-      if (fs.existsSync(filePath)) {
-        delete require.cache[require.resolve(filePath)];
-        const file = require(filePath);
-        products = Array.isArray(file.products) ? file.products : [];
-        works = Array.isArray(file.works) ? file.works : [];
+      const item = {
+        name: ctx.wizard.state.name,
+        img: ctx.wizard.state.imgPaths,
+        desc: ctx.wizard.state.desc,
+      };
+
+      if (ctx.wizard.state.type === 'product') {
+        item.price = ctx.wizard.state.price;
+        await Product.create(item);
+      } else {
+        await Work.create(item);
       }
+
+      await ctx.reply(`✅ ${ctx.wizard.state.type === 'product' ? 'Mahsulot' : 'Xizmat'} muvaffaqiyatli bazaga qo'shildi!`);
     } catch (err) {
-      console.error('❌ Faylni o‘qishda xato:', err);
-    }
-
-    const id = Date.now();
-    const item = {
-      id,
-      name: ctx.wizard.state.name,
-      img: ctx.wizard.state.imgPaths,
-      desc: ctx.wizard.state.desc,
-    };
-    if (ctx.wizard.state.type === 'product') {
-      item.price = ctx.wizard.state.price;
-      products.push(item);
-    } else {
-      works.push(item);
-    }
-
-    const output = `
-module.exports = {
-  products: ${JSON.stringify(products, null, 2)},
-  works: ${JSON.stringify(works, null, 2)}
-};`.trim();
-
-    try {
-      fs.writeFileSync(filePath, output, 'utf8');
-      await ctx.reply(`✅ ${ctx.wizard.state.type === 'product' ? 'Mahsulot' : 'Xizmat'} muvaffaqiyatli qo'shildi!`);
-    } catch (err) {
-      console.error('❌ Faylga yozishda xato:', err);
-      await ctx.reply('❌ Yozishda xatolik yuz berdi.');
+      console.error('❌ MongoDB yozishda xato:', err);
+      await ctx.reply("❌ Bazaga yozishda xatolik yuz berdi.");
     }
 
     return ctx.scene.leave();
   }
 );
 
-// Stage va session
 const stage = new Scenes.Stage([addScene]);
 bot.use(session());
 bot.use(stage.middleware());
 
-// Start komandasi
 bot.start((ctx) => {
   ctx.reply(`👋 Assalomu alaykum!\n📌 Ma'lumot qo'shish uchun: /add\n📌 Yangi admin qo'shish uchun: /addAdmin`);
 });
 
-// Faqat adminlar uchun qo‘shish
 bot.command('add', (ctx) => {
   if (!adminIds.includes(String(ctx.from.id))) {
     return ctx.reply("❌ Sizda bu amal uchun ruxsat yo'q.");
@@ -164,7 +142,6 @@ bot.command('add', (ctx) => {
   ctx.scene.enter('add-scene');
 });
 
-// Admin qo‘shish komandasi
 bot.command('addAdmin', async (ctx) => {
   const senderId = String(ctx.from.id);
   if (!adminIds.includes(senderId)) {
@@ -189,12 +166,18 @@ bot.command('addAdmin', async (ctx) => {
     fs.writeFileSync(envPath, envContent);
     ctx.reply(`✅ Admin qo'shildi! Yangi admin ID: ${newAdminId}`);
   } catch (err) {
-    console.error('❌ .env yangilashda xato:', err);
+    console.error('.env yangilashda xato:', err);
     ctx.reply("❌ .env faylga yozishda xato yuz berdi.");
   }
 });
 
-// Botni ishga tushurish
-bot.launch()
-  .then(() => console.log('🤖 Bot ishga tushdi'))
-  .catch((err) => console.error('❌ Botni ishga tushirishda xato:', err));
+// MongoDB bilan ulanib, keyin botni ishga tushuramiz
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => {
+  console.log('✅ MongoDB bilan ulandi');
+  bot.launch().then(() => console.log('🤖 Bot ishga tushdi'));
+}).catch(err => {
+  console.error('❌ MongoDBga ulanib bo‘lmadi:', err);
+});

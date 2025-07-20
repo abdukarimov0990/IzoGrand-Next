@@ -1,23 +1,30 @@
 'use client'
 
-import { useState, useContext } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import Link from 'next/link'
 import { BiHeart, BiSolidHeart } from 'react-icons/bi'
 import { FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from 'react-icons/fa'
 import { AppContext } from '../../context/AppContext'
-import { products } from '../../../bot/src/data/data'
 
 const ProductList = () => {
   const { selectedProducts, setSelectedProducts } = useContext(AppContext)
+  const [products, setProducts] = useState([])
   const [visibleCount, setVisibleCount] = useState(8)
   const [openModal, setOpenModal] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(err => console.error('❌ Mahsulotlarni yuklashda xato:', err))
+  }, [])
 
   const toggleFavorite = (product, e) => {
     e.stopPropagation()
     e.preventDefault()
-    const isSelected = selectedProducts?.some(p => p.name === product.name)
+    const isSelected = selectedProducts?.some(p => p._id === product._id)
     if (isSelected) {
-      setSelectedProducts(selectedProducts.filter(p => p.name !== product.name))
+      setSelectedProducts(selectedProducts.filter(p => p._id !== product._id))
     } else {
       setSelectedProducts([...selectedProducts, product])
     }
@@ -31,9 +38,9 @@ const ProductList = () => {
     <div className="container mx-auto px-4 py-10">
       <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.slice(0, visibleCount).map((product, index) => {
-          const isLiked = selectedProducts?.some(p => p.name === product.name)
+          const isLiked = selectedProducts?.some(p => p._id === product._id)
           return (
-            <li key={index} className="border border-gray-200 rounded-lg shadow-sm">
+            <li key={product._id || index} className="border border-gray-200 rounded-lg shadow-sm">
               <div className="relative">
                 <button
                   className="absolute right-3 top-2 text-red-600 z-10"
@@ -41,8 +48,8 @@ const ProductList = () => {
                 >
                   {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
                 </button>
-                <Link href={`/product/${product.id}`}>
-                  <img src={product.img} alt={product.name} className="w-full h-[280px] object-contain" />
+                <Link href={`/product/${product._id}`}>
+                  <img src={`/${product.img?.[0]}`} alt={product.name} className="w-full h-[280px] object-contain" />
                 </Link>
               </div>
               <div className="flex flex-col p-4 gap-2">

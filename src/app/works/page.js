@@ -1,23 +1,40 @@
 'use client'
 
-import { useState, useContext } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import Link from 'next/link'
-import { works } from "../../../bot/src/data/data"
 import { BiHeart, BiSolidHeart } from 'react-icons/bi'
 import { FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from 'react-icons/fa'
 import { AppContext } from '../../context/AppContext'
 
-const WorksList = () => { 
+const WorksList = () => {
   const { selectedProducts, setSelectedProducts } = useContext(AppContext)
   const [visibleCount, setVisibleCount] = useState(8)
   const [openModal, setOpenModal] = useState(false)
+  const [works, setWorks] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchWorks = async () => {
+      try {
+        const res = await fetch('/api/works')
+        const data = await res.json()
+        setWorks(data)
+      } catch (error) {
+        console.error("Xizmatlar yuklanmadi", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchWorks()
+  }, [])
 
   const toggleFavorite = (work, e) => {
     e.stopPropagation()
     e.preventDefault()
-    const isSelected = selectedProducts?.some(p => p.name === work.name)
+    const isSelected = selectedProducts?.some(p => p._id === work._id)
     if (isSelected) {
-      setSelectedProducts(selectedProducts.filter(p => p.name !== work.name))
+      setSelectedProducts(selectedProducts.filter(p => p._id !== work._id))
     } else {
       setSelectedProducts([...selectedProducts, work])
     }
@@ -27,11 +44,15 @@ const WorksList = () => {
     setVisibleCount(visibleCount >= works.length ? 8 : visibleCount + 8)
   }
 
+  if (loading) {
+    return <div className="text-center py-20 text-gray-500">Yuklanmoqda...</div>
+  }
+
   return (
     <div className="container mx-auto px-4 py-10">
       <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {works.slice(0, visibleCount).map((work, index) => {
-          const isLiked = selectedProducts?.some(p => p.name === work.name)
+          const isLiked = selectedProducts?.some(p => p._id === work._id)
           return (
             <li key={index} className="border border-gray-200 rounded-lg shadow-sm">
               <div className="relative">
@@ -41,7 +62,7 @@ const WorksList = () => {
                 >
                   {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
                 </button>
-                <Link href={`/work/${work.id}`}>
+                <Link href={`/work/${work._id}`}>
                   <img src={work.img[0]} alt={work.name} className="w-full h-[280px] object-contain" />
                 </Link>
               </div>

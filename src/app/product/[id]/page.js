@@ -1,10 +1,9 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { AppContext } from '../../../context/AppContext'
 import { BiHeart, BiSolidHeart } from 'react-icons/bi'
-import { products } from '../../../../bot/src/data/data'
 
 // Swiper
 import { Swiper, SwiperSlide } from 'swiper/react'
@@ -18,17 +17,37 @@ const Product = () => {
   const { id } = useParams()
   const { selectedProducts, setSelectedProducts } = useContext(AppContext)
   const [thumbsSwiper, setThumbsSwiper] = useState(null)
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const product = products.find(p => p.id.toString() === id)
-  const isLiked = selectedProducts.some(p => p.id === product?.id)
+  useEffect(() => {
+    if (id) {
+      fetch(`/api/products/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          setProduct(data)
+          setLoading(false)
+        })
+        .catch(err => {
+          console.error('❌ Mahsulotni olishda xato:', err)
+          setLoading(false)
+        })
+    }
+  }, [id])
+
+  const isLiked = selectedProducts.some(p => p._id === product?._id)
 
   const toggleFavorite = () => {
     if (!product) return
     if (isLiked) {
-      setSelectedProducts(prev => prev.filter(p => p.id !== product.id))
+      setSelectedProducts(prev => prev.filter(p => p._id !== product._id))
     } else {
       setSelectedProducts(prev => [...prev, product])
     }
+  }
+
+  if (loading) {
+    return <div className="text-center py-20 text-gray-500">Yuklanmoqda...</div>
   }
 
   if (!product) {
@@ -40,7 +59,7 @@ const Product = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-10 flex flex-col md:flex-row ">
+    <div className="container mx-auto px-4 py-10 flex flex-col md:flex-row">
       <div className="w-full md:w-1/2">
         {/* Swiper gallery */}
         <Swiper
@@ -54,10 +73,10 @@ const Product = () => {
           modules={[FreeMode, Navigation, Thumbs]}
           className="mb-4"
         >
-          {product.img.map((imgUrl, index) => (
+          {product.img?.map((imgUrl, index) => (
             <SwiperSlide key={index}>
               <img
-                src={imgUrl}
+                src={`/${imgUrl}`}
                 alt={`${product.name} ${index + 1}`}
                 className="w-full h-[400px] object-contain rounded-xl"
               />
@@ -73,10 +92,10 @@ const Product = () => {
           watchSlidesProgress={true}
           modules={[FreeMode, Navigation, Thumbs]}
         >
-          {product.img.map((imgUrl, index) => (
+          {product.img?.map((imgUrl, index) => (
             <SwiperSlide key={index}>
               <img
-                src={imgUrl}
+                src={`/${imgUrl}`}
                 alt={`thumb-${index + 1}`}
                 className="h-[100px] w-[100px] object-contain border rounded"
               />
@@ -85,7 +104,7 @@ const Product = () => {
         </Swiper>
       </div>
 
-      <div className="md:w-1/2">
+      <div className="md:w-1/2 md:pl-10 mt-6 md:mt-0">
         <h1 className="text-2xl font-bold mb-4">{product.name}</h1>
         <p className="text-lg text-gray-700">{product.desc}</p>
 
