@@ -6,11 +6,12 @@ import { BiHeart, BiSolidHeart } from 'react-icons/bi'
 import Image from 'next/image'
 import result from "../../../public/img/result.svg"
 import { AppContext } from '../../context/AppContext'
+import { collection, getDocs } from 'firebase/firestore'
+import db from '../../../lib/firebase'
 
 const Search = () => {
   const searchParams = useSearchParams()
   const query = searchParams.get('q')?.toLowerCase() || ''
-
   const { selectedProducts, setSelectedProducts } = useContext(AppContext) || {}
 
   const [products, setProducts] = useState([])
@@ -19,12 +20,15 @@ const Search = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/products')
-        const data = await res.json()
-        setProducts(data)
-        setLoading(false)
+        const querySnapshot = await getDocs(collection(db, 'products'))
+        const productsArray = querySnapshot.docs.map(doc => ({
+          _id: doc.id,
+          ...doc.data()
+        }))
+        setProducts(productsArray)
       } catch (err) {
         console.error("❌ Maʼlumotlar yuklanishda xato:", err)
+      } finally {
         setLoading(false)
       }
     }
@@ -71,7 +75,7 @@ const Search = () => {
                     {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
                   </button>
                   <img
-                    src={product.img[0]} // agar img array bo‘lsa
+                    src={product.img[0]}
                     alt={product.name}
                     className="w-full h-[280px] object-contain"
                   />

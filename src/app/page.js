@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useContext, useEffect, useState } from 'react'
+import { collection, getDocs } from 'firebase/firestore'
+import db from '@/lib/firebase'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import 'swiper/css'
 import 'swiper/css/pagination'
@@ -20,35 +22,25 @@ const Home = () => {
   const [visibleCount, setVisibleCount] = useState(4)
   const [openModal, setOpenModal] = useState(false)
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsRes, worksRes] = await Promise.all([
-          fetch('/api/products'),
-          fetch('/api/works'),
-        ])
-  
-        // Check for network or server errors before parsing
-        if (!productsRes.ok || !worksRes.ok) {
-          throw new Error(`Xatolik: ${productsRes.status} va ${worksRes.status}`)
-        }
-  
-        const productsText = await productsRes.text()
-        const worksText = await worksRes.text()
-  
-        const productsData = productsText ? JSON.parse(productsText) : []
-        const worksData = worksText ? JSON.parse(worksText) : []
-  
+        const productsSnapshot = await getDocs(collection(db, 'products'))
+        const worksSnapshot = await getDocs(collection(db, 'works'))
+
+        const productsData = productsSnapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }))
+        const worksData = worksSnapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }))
+
         setProducts(productsData)
         setWorks(worksData)
       } catch (error) {
-        console.error('Maʼlumotlar yuklanishda xatolik:', error)
+        console.error('Firebase’dan maʼlumotlarni olishda xatolik:', error)
       }
     }
-  
+
     fetchData()
   }, [])
+
   const toggleFavorite = (item, e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -94,7 +86,6 @@ const Home = () => {
                 </SwiperSlide>
               ))}
             </Swiper>
-
             <div className="custom-prev absolute left-3 top-1/2 -translate-y-1/2 z-10 p-3 opacity-50 hover:opacity-100 bg-white rounded-full shadow cursor-pointer">
               <MdKeyboardArrowLeft size={24} />
             </div>
@@ -114,7 +105,6 @@ const Home = () => {
               Qurilish mahsulotlari <MdKeyboardArrowRight />
             </h2>
           </Link>
-
           <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.slice(0, visibleCount).map((product) => {
               const isLiked = selectedProducts.some(p => p._id === product._id)
@@ -128,7 +118,7 @@ const Home = () => {
                       {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
                     </button>
                     <Link href={`/product/${product._id}`}>
-                      <img src={product.img[0]} alt={product.name} className='w-full h-[280px] object-contain' />
+                      <img src={product.img?.[0]} alt={product.name} className='w-full h-[280px] object-contain' />
                     </Link>
                   </div>
                   <div className="flex flex-col p-4 gap-2">
@@ -146,7 +136,6 @@ const Home = () => {
               )
             })}
           </ul>
-
           {products.length > 4 && (
             <div className="text-center mt-8">
               <button
@@ -168,7 +157,6 @@ const Home = () => {
               Xizmatlar <MdKeyboardArrowRight />
             </h2>
           </Link>
-
           <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {works.slice(0, visibleCount).map((work) => {
               const isLiked = selectedProducts.some(p => p._id === work._id)
@@ -182,11 +170,7 @@ const Home = () => {
                       {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
                     </button>
                     <Link href={`/work/${work._id}`}>
-                      <img
-                        src={work.img[0]}
-                        alt={work.name}
-                        className='w-full h-[280px] object-contain'
-                      />
+                      <img src={work.img?.[0]} alt={work.name} className='w-full h-[280px] object-contain' />
                     </Link>
                   </div>
                   <div className="flex flex-col p-4 gap-2">
@@ -203,7 +187,6 @@ const Home = () => {
               )
             })}
           </ul>
-
           {works.length > 4 && (
             <div className="text-center mt-8">
               <button
@@ -220,50 +203,30 @@ const Home = () => {
       {/* Modal */}
       {openModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50">
-          <div className="bg-gradient-to-br from-white to-gray-100 rounded-3xl shadow-2xl w-full max-w-lg p-8 relative border border-gray-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 relative border border-gray-200">
             <button
               className="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition"
               onClick={() => setOpenModal(false)}
             >
               <FaTimes size={26} />
             </button>
-
-            <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-              Biz bilan bog‘laning
-            </h2>
+            <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Biz bilan bog‘laning</h2>
             <p className="text-center text-gray-600 mb-8">
               Sotib olish yoki qo‘shimcha ma’lumot uchun quyidagi manzillarga murojaat qiling:
             </p>
-
             <div className="flex flex-col gap-5 text-center">
-              <a
-                href="https://t.me/your_telegram_username"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-3 px-5 py-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition shadow-sm"
-              >
+              <a href="https://t.me/your_telegram_username" className="flex items-center justify-center gap-3 px-5 py-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition shadow-sm">
                 <FaTelegramPlane size={22} />
                 <span className="font-medium">Telegram orqali yozish</span>
               </a>
-
-              <a
-                href="https://instagram.com/your_instagram_username"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-3 px-5 py-3 bg-pink-50 text-pink-600 rounded-xl hover:bg-pink-100 transition shadow-sm"
-              >
+              <a href="https://instagram.com/your_instagram_username" className="flex items-center justify-center gap-3 px-5 py-3 bg-pink-50 text-pink-600 rounded-xl hover:bg-pink-100 transition shadow-sm">
                 <FaInstagram size={22} />
                 <span className="font-medium">Instagram sahifamiz</span>
               </a>
-
               <div className="flex items-center justify-center gap-3 px-5 py-3 bg-green-50 text-green-700 rounded-xl shadow-sm">
                 <FaPhoneAlt size={20} />
                 <span className="font-semibold">+998 90 123 45 67</span>
               </div>
-            </div>
-
-            <div className="mt-8 text-center text-sm text-gray-400">
-              <p>Sizning murojaatingiz biz uchun muhim ❤️</p>
             </div>
           </div>
         </div>

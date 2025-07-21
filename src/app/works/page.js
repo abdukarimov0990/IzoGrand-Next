@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { BiHeart, BiSolidHeart } from 'react-icons/bi'
 import { FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from 'react-icons/fa'
 import { AppContext } from '../../context/AppContext'
+import { collection, getDocs } from 'firebase/firestore'
+import db from '../../../lib/firebase'
 
 const WorksList = () => {
   const { selectedProducts, setSelectedProducts } = useContext(AppContext)
@@ -13,15 +15,17 @@ const WorksList = () => {
   const [works, setWorks] = useState([])
   const [loading, setLoading] = useState(true)
 
-
   useEffect(() => {
     const fetchWorks = async () => {
       try {
-        const res = await   fetch('/api/works')
-        const data = await res.json()
-        setWorks(data)
+        const querySnapshot = await getDocs(collection(db, 'works'))
+        const worksArray = querySnapshot.docs.map(doc => ({
+          _id: doc.id,
+          ...doc.data()
+        }))
+        setWorks(worksArray)
       } catch (error) {
-        console.error("Xizmatlar yuklanmadi", error)
+        console.error("Xizmatlar yuklanmadi:", error)
       } finally {
         setLoading(false)
       }
@@ -64,7 +68,7 @@ const WorksList = () => {
                   {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
                 </button>
                 <Link href={`/work/${work._id}`}>
-                  <img src={work.img[0]} alt={work.name} className="w-full h-[280px] object-contain" />
+                  <img src={work.img?.[0]} alt={work.name} className="w-full h-[280px] object-contain" />
                 </Link>
               </div>
               <div className="flex flex-col p-4 gap-2">

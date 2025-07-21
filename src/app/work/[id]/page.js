@@ -10,6 +10,8 @@ import 'swiper/css/free-mode'
 import 'swiper/css/navigation'
 import 'swiper/css/thumbs'
 import { FreeMode, Navigation, Thumbs } from 'swiper/modules'
+import { doc, getDoc } from 'firebase/firestore'
+import db from '../../../../lib/firebase'
 
 const Product = () => {
   const { id } = useParams()
@@ -18,13 +20,16 @@ const Product = () => {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
 
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`/api/works/${id}`)
-        const data = await res.json()
-        setProduct(data)
+        const docRef = doc(db, 'works', id)
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+          setProduct({ _id: docSnap.id, ...docSnap.data() })
+        } else {
+          setProduct(null)
+        }
       } catch (error) {
         console.error("Mahsulot yuklanmadi", error)
       } finally {
@@ -95,7 +100,7 @@ const Product = () => {
         </Swiper>
       </div>
 
-      <div className="md:w-1/2">
+      <div className="md:w-1/2 mt-6 md:mt-0 md:pl-10">
         <h1 className="text-2xl font-bold mb-4">{product.name}</h1>
         <p className="text-lg text-gray-700">{product.desc}</p>
 

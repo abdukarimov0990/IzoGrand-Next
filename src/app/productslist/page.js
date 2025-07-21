@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { BiHeart, BiSolidHeart } from 'react-icons/bi'
 import { FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from 'react-icons/fa'
 import { AppContext } from '../../context/AppContext'
+import { collection, getDocs } from 'firebase/firestore'
+import db from '../../../lib/firebase'
 
 const ProductList = () => {
   const { selectedProducts, setSelectedProducts } = useContext(AppContext)
@@ -13,10 +15,20 @@ const ProductList = () => {
   const [openModal, setOpenModal] = useState(false)
 
   useEffect(() => {
-    fetch('/api/products')
-      .then(res => res.json())
-      .then(data => setProducts(data))
-      .catch(err => console.error('❌ Mahsulotlarni yuklashda xato:', err))
+    const fetchProducts = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'products'))
+        const productsArray = querySnapshot.docs.map(doc => ({
+          _id: doc.id,
+          ...doc.data()
+        }))
+        setProducts(productsArray)
+      } catch (err) {
+        console.error('❌ Mahsulotlarni yuklashda xato:', err)
+      }
+    }
+
+    fetchProducts()
   }, [])
 
   const toggleFavorite = (product, e) => {
@@ -31,7 +43,7 @@ const ProductList = () => {
   }
 
   const handleToggle = () => {
-    setVisibleCount(visibleCount >= products.length ? 8 : visibleCount + 8)
+    setVisibleCount(prev => (prev >= products.length ? 8 : prev + 8))
   }
 
   return (
@@ -49,14 +61,17 @@ const ProductList = () => {
                   {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
                 </button>
                 <Link href={`/product/${product._id}`}>
-                  <img src={`/${product.img?.[0]}`} alt={product.name} className="w-full h-[280px] object-contain" />
+                  <img
+                    src={product.img?.[0]}
+                    alt={product.name}
+                    className="w-full h-[280px] object-contain"
+                  />
                 </Link>
               </div>
               <div className="flex flex-col p-4 gap-2">
                 <h2 className="text-lg font-semibold">{product.name}</h2>
                 <p className="text-gray-600 text-sm">{product.desc}</p>
                 <p className="text-base font-bold text-second">{product.price} so'm</p>
-
                 <button
                   onClick={() => setOpenModal(true)}
                   className="mt-auto px-4 py-2 bg-second text-white rounded-lg hover:opacity-80 transition"

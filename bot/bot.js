@@ -3,11 +3,8 @@ const { Telegraf, Scenes, session } = require('telegraf');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const mongoose = require('mongoose');
-
-// MongoDB modellari
-const Product = require('../models/Product');
-const Work = require('../models/Work');
+const db = require('../lib/firebase');
+const { collection, addDoc } = require('firebase/firestore');
 
 // Bot token
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -112,14 +109,14 @@ const addScene = new Scenes.WizardScene(
 
       if (ctx.wizard.state.type === 'product') {
         item.price = ctx.wizard.state.price;
-        await Product.create(item);
-      } else {
-        await Work.create(item);
       }
 
-      await ctx.reply(`✅ ${ctx.wizard.state.type === 'product' ? 'Mahsulot' : 'Xizmat'} muvaffaqiyatli bazaga qo'shildi!`);
+      const col = collection(db, ctx.wizard.state.type === 'product' ? 'products' : 'works');
+      await addDoc(col, item);
+
+      await ctx.reply(`✅ ${ctx.wizard.state.type === 'product' ? 'Mahsulot' : 'Xizmat'} muvaffaqiyatli Firestore bazasiga qo'shildi!`);
     } catch (err) {
-      console.error('❌ MongoDB yozishda xato:', err);
+      console.error('❌ Firestore yozishda xato:', err);
       await ctx.reply("❌ Bazaga yozishda xatolik yuz berdi.");
     }
 
@@ -171,13 +168,5 @@ bot.command('addAdmin', async (ctx) => {
   }
 });
 
-// MongoDB bilan ulanib, keyin botni ishga tushuramiz
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('✅ MongoDB bilan ulandi');
-  bot.launch().then(() => console.log('🤖 Bot ishga tushdi'));
-}).catch(err => {
-  console.error('❌ MongoDBga ulanib bo‘lmadi:', err);
-});
+// 🔄 Firestore bo'lgani uchun, launch bevosita
+bot.launch().then(() => console.log('🤖 Bot Firestore bilan ishga tushdi'));

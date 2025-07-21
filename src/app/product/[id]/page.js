@@ -1,123 +1,152 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-import { useContext, useEffect, useState } from 'react'
-import { AppContext } from '../../../context/AppContext'
+import { useEffect, useState, useContext } from 'react'
+import Link from 'next/link'
 import { BiHeart, BiSolidHeart } from 'react-icons/bi'
+import { FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from 'react-icons/fa'
+import { AppContext } from '../../context/AppContext'
+import { collection, getDocs } from 'firebase/firestore'
+import db from '../../../../lib/firebase'
 
-// Swiper
-import { Swiper, SwiperSlide } from 'swiper/react'
-import 'swiper/css'
-import 'swiper/css/free-mode'
-import 'swiper/css/navigation'
-import 'swiper/css/thumbs'
-import { FreeMode, Navigation, Thumbs } from 'swiper/modules'
-
-const Product = () => {
-  const { id } = useParams()
+const ProductList = () => {
   const { selectedProducts, setSelectedProducts } = useContext(AppContext)
-  const [thumbsSwiper, setThumbsSwiper] = useState(null)
-  const [product, setProduct] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [products, setProducts] = useState([])
+  const [visibleCount, setVisibleCount] = useState(8)
+  const [openModal, setOpenModal] = useState(false)
 
   useEffect(() => {
-    if (id) {
-      fetch(`/api/products/${id}`)
-        .then(res => res.json())
-        .then(data => {
-          setProduct(data)
-          setLoading(false)
-        })
-        .catch(err => {
-          console.error('❌ Mahsulotni olishda xato:', err)
-          setLoading(false)
-        })
+    const fetchProducts = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'products'))
+        const productsArray = querySnapshot.docs.map(doc => ({
+          _id: doc.id,
+          ...doc.data()
+        }))
+        setProducts(productsArray)
+      } catch (err) {
+        console.error('❌ Mahsulotlarni yuklashda xato:', err)
+      }
     }
-  }, [id])
 
-  const isLiked = selectedProducts.some(p => p._id === product?._id)
+    fetchProducts()
+  }, [])
 
-  const toggleFavorite = () => {
-    if (!product) return
-    if (isLiked) {
-      setSelectedProducts(prev => prev.filter(p => p._id !== product._id))
+  const toggleFavorite = (product, e) => {
+    e.stopPropagation()
+    e.preventDefault()
+    const isSelected = selectedProducts?.some(p => p._id === product._id)
+    if (isSelected) {
+      setSelectedProducts(selectedProducts.filter(p => p._id !== product._id))
     } else {
-      setSelectedProducts(prev => [...prev, product])
+      setSelectedProducts([...selectedProducts, product])
     }
   }
 
-  if (loading) {
-    return <div className="text-center py-20 text-gray-500">Yuklanmoqda...</div>
-  }
-
-  if (!product) {
-    return (
-      <div className="text-center py-20 text-red-500">
-        Mahsulot topilmadi
-      </div>
-    )
+  const handleToggle = () => {
+    setVisibleCount(prev => (prev >= products.length ? 8 : prev + 8))
   }
 
   return (
-    <div className="container mx-auto px-4 py-10 flex flex-col md:flex-row">
-      <div className="w-full md:w-1/2">
-        {/* Swiper gallery */}
-        <Swiper
-          style={{
-            '--swiper-navigation-color': '#000',
-            '--swiper-pagination-color': '#000',
-          }}
-          spaceBetween={10}
-          navigation={true}
-          thumbs={{ swiper: thumbsSwiper }}
-          modules={[FreeMode, Navigation, Thumbs]}
-          className="mb-4"
-        >
-          {product.img?.map((imgUrl, index) => (
-            <SwiperSlide key={index}>
-              <img
-                src={`/${imgUrl}`}
-                alt={`${product.name} ${index + 1}`}
-                className="w-full h-[400px] object-contain rounded-xl"
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
+    <div className="container mx-auto px-4 py-10">
+      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {products.slice(0, visibleCount).map((product, index) => {
+          const isLiked = selectedProducts?.some(p => p._id === product._id)
+          return (
+            <li key={product._id || index} className="border border-gray-200 rounded-lg shadow-sm">
+              <div className="relative">
+                <button
+                  className="absolute right-3 top-2 text-red-600 z-10"
+                  onClick={(e) => toggleFavorite(product, e)}
+                >
+                  {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
+                </button>
+                <Link href={`/product/${product._id}`}>
+                  <img
+                    src={product.img?.[0]}
+                    alt={product.name}
+                    className="w-full h-[280px] object-contain"
+                  />
+                </Link>
+              </div>
+              <div className="flex flex-col p-4 gap-2">
+                <h2 className="text-lg font-semibold">{product.name}</h2>
+                <p className="text-gray-600 text-sm">{product.desc}</p>
+                <p className="text-base font-bold text-second">{product.price} so'm</p>
+                <button
+                  onClick={() => setOpenModal(true)}
+                  className="mt-auto px-4 py-2 bg-second text-white rounded-lg hover:opacity-80 transition"
+                >
+                  Sotib olish
+                </button>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
 
-        {/* Thumbnails */}
-        <Swiper
-          onSwiper={setThumbsSwiper}
-          slidesPerView={4}
-          freeMode={true}
-          watchSlidesProgress={true}
-          modules={[FreeMode, Navigation, Thumbs]}
-        >
-          {product.img?.map((imgUrl, index) => (
-            <SwiperSlide key={index}>
-              <img
-                src={`/${imgUrl}`}
-                alt={`thumb-${index + 1}`}
-                className="h-[100px] w-[100px] object-contain border rounded"
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
+      {products.length > 8 && (
+        <div className="text-center mt-8">
+          <button
+            className="px-6 py-3 bg-white text-second border border-second rounded-xl hover:bg-second hover:text-white transition"
+            onClick={handleToggle}
+          >
+            {visibleCount >= products.length ? 'Yopish' : 'Ko‘proq ko‘rish'}
+          </button>
+        </div>
+      )}
 
-      <div className="md:w-1/2 md:pl-10 mt-6 md:mt-0">
-        <h1 className="text-2xl font-bold mb-4">{product.name}</h1>
-        <p className="text-lg text-gray-700">{product.desc}</p>
+      {openModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50">
+          <div className="bg-gradient-to-br from-white to-gray-100 rounded-3xl shadow-2xl w-full max-w-lg p-8 relative border border-gray-200">
+            <button
+              className="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition"
+              onClick={() => setOpenModal(false)}
+            >
+              <FaTimes size={26} />
+            </button>
 
-        <button
-          onClick={toggleFavorite}
-          className="mt-4 flex items-center gap-2 text-red-600"
-        >
-          {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
-          {isLiked ? 'Sevimlilarda' : 'Sevimlilarga qo‘shish'}
-        </button>
-      </div>
+            <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+              Biz bilan bog‘laning
+            </h2>
+            <p className="text-center text-gray-600 mb-8">
+              Sotib olish yoki qo‘shimcha ma’lumot uchun quyidagi manzillarga murojaat qiling:
+            </p>
+
+            <div className="flex flex-col gap-5 text-center">
+              <a
+                href="https://t.me/your_telegram_username"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 px-5 py-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition shadow-sm"
+              >
+                <FaTelegramPlane size={22} />
+                <span className="font-medium">Telegram orqali yozish</span>
+              </a>
+
+              <a
+                href="https://instagram.com/your_instagram_username"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 px-5 py-3 bg-pink-50 text-pink-600 rounded-xl hover:bg-pink-100 transition shadow-sm"
+              >
+                <FaInstagram size={22} />
+                <span className="font-medium">Instagram sahifamiz</span>
+              </a>
+
+              <div className="flex items-center justify-center gap-3 px-5 py-3 bg-green-50 text-green-700 rounded-xl shadow-sm">
+                <FaPhoneAlt size={20} />
+                <span className="font-semibold">+998 90 123 45 67</span>
+              </div>
+            </div>
+
+            <div className="mt-8 text-center text-sm text-gray-400">
+              <p>Sizning murojaatingiz biz uchun muhim ❤️</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-export default Product
+export default ProductList
