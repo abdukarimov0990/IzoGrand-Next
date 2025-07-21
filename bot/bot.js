@@ -6,8 +6,8 @@ const axios = require('axios');
 const mongoose = require('mongoose');
 
 // MongoDB modellari
-const Product = require('./models/Product');
-const Work = require('./models/Work');
+const Product = require('../models/Product');
+const Work = require('../models/Work');
 
 // Bot token
 const bot = new Telegraf(process.env.BOT_TOKEN);
