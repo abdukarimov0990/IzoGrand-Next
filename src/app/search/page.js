@@ -1,30 +1,52 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useContext } from 'react'
-import { products } from '@/data/data'
+import { useContext, useEffect, useState } from 'react'
 import { BiHeart, BiSolidHeart } from 'react-icons/bi'
 import Image from 'next/image'
 import result from "../../../public/img/result.svg"
-import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import { AppContext } from '../../context/AppContext'
 
 const Search = () => {
   const searchParams = useSearchParams()
   const query = searchParams.get('q')?.toLowerCase() || ''
+
+  const { selectedProducts, setSelectedProducts } = useContext(AppContext) || {}
+
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('/api/products')
+        const data = await res.json()
+        setProducts(data)
+        setLoading(false)
+      } catch (err) {
+        console.error("❌ Maʼlumotlar yuklanishda xato:", err)
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
+
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(query)
   )
 
-  const { selectedProducts, setSelectedProducts } = useContext(AppContext) || {}
-
   const toggleFavorite = (product) => {
-    const isSelected = selectedProducts.some(p => p.name === product.name)
+    const isSelected = selectedProducts?.some(p => p._id === product._id)
     if (isSelected) {
-      setSelectedProducts(selectedProducts.filter(p => p.name !== product.name))
+      setSelectedProducts(prev => prev.filter(p => p._id !== product._id))
     } else {
-      setSelectedProducts([...selectedProducts, product])
+      setSelectedProducts(prev => [...prev, product])
     }
+  }
+
+  if (loading) {
+    return <div className="text-center py-20 text-gray-500">Yuklanmoqda...</div>
   }
 
   return (
@@ -37,10 +59,10 @@ const Search = () => {
 
       {filteredProducts.length > 0 ? (
         <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredProducts.map((product, index) => {
-            const isLiked = selectedProducts.some(p => p.name === product.name)
+          {filteredProducts.map((product) => {
+            const isLiked = selectedProducts?.some(p => p._id === product._id)
             return (
-              <li key={index} className="border border-gray-200 rounded-lg shadow-sm">
+              <li key={product._id} className="border border-gray-200 rounded-lg shadow-sm">
                 <div className="relative">
                   <button
                     className="absolute right-3 top-2 text-red-600"
@@ -49,7 +71,7 @@ const Search = () => {
                     {isLiked ? <BiSolidHeart size={24} /> : <BiHeart size={24} />}
                   </button>
                   <img
-                    src={product.img}
+                    src={product.img[0]} // agar img array bo‘lsa
                     alt={product.name}
                     className="w-full h-[280px] object-contain"
                   />

@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose'
 
 const ProductSchema = new mongoose.Schema({
   name: String,
   price: Number,
   desc: String,
-  img: [String], // Rasmlar ro'yxati
-});
+  img: [String],
+})
 
-module.exports = mongoose.model('Product', ProductSchema);
+export default mongoose.models.Product || mongoose.model('Product', ProductSchema)

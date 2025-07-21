@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose'
 
 const WorkSchema = new mongoose.Schema({
   name: String,
   desc: String,
-  img: [String], // Rasmlar ro'yxati
-});
+  img: [String],
+})
 
-module.exports = mongoose.model('Work', WorkSchema);
+export default mongoose.models.Work || mongoose.model('Work', WorkSchema)

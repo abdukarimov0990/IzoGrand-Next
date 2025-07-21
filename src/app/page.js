@@ -20,6 +20,7 @@ const Home = () => {
   const [visibleCount, setVisibleCount] = useState(4)
   const [openModal, setOpenModal] = useState(false)
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -27,20 +28,27 @@ const Home = () => {
           fetch('/api/products'),
           fetch('/api/works'),
         ])
-        const [productsData, worksData] = await Promise.all([
-          productsRes.json(),
-          worksRes.json(),
-        ])
+  
+        // Check for network or server errors before parsing
+        if (!productsRes.ok || !worksRes.ok) {
+          throw new Error(`Xatolik: ${productsRes.status} va ${worksRes.status}`)
+        }
+  
+        const productsText = await productsRes.text()
+        const worksText = await worksRes.text()
+  
+        const productsData = productsText ? JSON.parse(productsText) : []
+        const worksData = worksText ? JSON.parse(worksText) : []
+  
         setProducts(productsData)
         setWorks(worksData)
       } catch (error) {
         console.error('Maʼlumotlar yuklanishda xatolik:', error)
       }
     }
-
+  
     fetchData()
   }, [])
-
   const toggleFavorite = (item, e) => {
     e.preventDefault()
     e.stopPropagation()

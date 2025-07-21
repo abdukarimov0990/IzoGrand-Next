@@ -13,10 +13,11 @@ const WorksList = () => {
   const [works, setWorks] = useState([])
   const [loading, setLoading] = useState(true)
 
+
   useEffect(() => {
     const fetchWorks = async () => {
       try {
-        const res = await fetch('/api/works')
+        const res = await   fetch('/api/works')
         const data = await res.json()
         setWorks(data)
       } catch (error) {
