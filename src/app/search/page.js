@@ -7,7 +7,7 @@ import Image from 'next/image'
 import result from "../../../public/img/result.svg"
 import { AppContext } from '../../context/AppContext'
 import { collection, getDocs } from 'firebase/firestore'
-import db from '../../../lib/firebase'
+import {db} from '../../../lib/firebase'
 
 const Search = () => {
   const searchParams = useSearchParams()

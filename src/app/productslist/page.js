@@ -6,7 +6,7 @@ import { BiHeart, BiSolidHeart } from 'react-icons/bi'
 import { FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from 'react-icons/fa'
 import { AppContext } from '../../context/AppContext'
 import { collection, getDocs } from 'firebase/firestore'
-import db from '../../../lib/firebase'
+import {db} from '../../../lib/firebase'
 
 const ProductList = () => {
   const { selectedProducts, setSelectedProducts } = useContext(AppContext)
