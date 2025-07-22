@@ -2,7 +2,7 @@
 
 import React, { useContext, useEffect, useState } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
-import db from '@/lib/firebase'
+import {db} from '../../lib/firebase'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import 'swiper/css'
 import 'swiper/css/pagination'
