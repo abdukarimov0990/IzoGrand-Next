@@ -11,7 +11,7 @@ import 'swiper/css/navigation'
 import 'swiper/css/thumbs'
 import { FreeMode, Navigation, Thumbs } from 'swiper/modules'
 import { doc, getDoc } from 'firebase/firestore'
-import db from '../../../../lib/firebase'
+import {db} from '../../../../lib/firebase'
 
 const Product = () => {
   const { id } = useParams()
