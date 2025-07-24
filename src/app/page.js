@@ -105,7 +105,7 @@ const Home = () => {
               Qurilish mahsulotlari <MdKeyboardArrowRight />
             </h2>
           </Link>
-          <ul className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <ul className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 lg:gap-6">
             {products.slice(0, visibleCount).map((product) => {
               const isLiked = selectedProducts.some(p => p._id === product._id)
               return (
@@ -157,7 +157,7 @@ const Home = () => {
               Xizmatlar <MdKeyboardArrowRight />
             </h2>
           </Link>
-          <ul className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <ul className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 lg:gap-6">
             {works.slice(0, visibleCount).map((work) => {
               const isLiked = selectedProducts.some(p => p._id === work._id)
               return (
@@ -180,7 +180,7 @@ const Home = () => {
                       onClick={() => setOpenModal(true)}
                       className="mt-auto px-4 py-2 bg-second text-white rounded-lg hover:opacity-80 transition"
                     >
-                      Xizmatdan foydalanish
+                      buyurtma
                     </button>
                   </div>
                 </li>

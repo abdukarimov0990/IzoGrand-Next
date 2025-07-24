@@ -11,7 +11,9 @@ import 'swiper/css/navigation'
 import 'swiper/css/thumbs'
 import { FreeMode, Navigation, Thumbs } from 'swiper/modules'
 import { doc, getDoc } from 'firebase/firestore'
-import {db} from '../../../../lib/firebase'
+import { db } from '../../../../lib/firebase'
+import { FaArrowLeft, FaHome } from 'react-icons/fa'
+import Link from 'next/link'
 
 const Product = () => {
   const { id } = useParams()
@@ -60,7 +62,15 @@ const Product = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-10 flex flex-col md:flex-row">
+    <div className='container'>
+      <Link href="/" className='pt-10 mb-5'>
+        <button className="flex items-center gap-2 py-2 px-5 border border-gray-300 text-gray-600 rounded-lg transition hover:bg-gray-100 hover:text-black hover:shadow-sm">
+          <FaHome size={24} />
+          <span>Bosh sahifa</span>
+        </button>
+      </Link>
+          <div className="container mx-auto px-4 py-10 flex flex-col md:flex-row">
+
       <div className="w-full md:w-1/2">
         <Swiper
           style={{ '--swiper-navigation-color': '#000', '--swiper-pagination-color': '#000' }}
@@ -112,6 +122,8 @@ const Product = () => {
           {isLiked ? 'Sevimlilarda' : 'Sevimlilarga qo‘shish'}
         </button>
       </div>
+    </div>
+
     </div>
   )
 }

@@ -3,7 +3,7 @@
 import { useState, useContext, useEffect } from 'react'
 import Link from 'next/link'
 import { BiHeart, BiSolidHeart } from 'react-icons/bi'
-import { FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from 'react-icons/fa'
+import { FaArrowLeft, FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from 'react-icons/fa'
 import { AppContext } from '../../context/AppContext'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../../lib/firebase' // agar firebase.js `lib` ichida bo‘lsa
@@ -55,7 +55,7 @@ const WorksList = () => {
 
   return (
     <div className="container mx-auto px-4 py-10">
-      <ul className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <ul className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 lg:gap-6">
         {works.slice(0, visibleCount).map((work, index) => {
           const isLiked = selectedProducts?.some(p => p._id === work._id)
           return (
