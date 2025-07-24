@@ -55,7 +55,7 @@ const WorksList = () => {
 
   return (
     <div className="container mx-auto px-4 py-10">
-      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <ul className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {works.slice(0, visibleCount).map((work, index) => {
           const isLiked = selectedProducts?.some(p => p._id === work._id)
           return (

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 .container{
-    @apply w-full max-w-7xl px-5 mx-auto
+    @apply w-full max-w-7xl px-1 mx-auto
 }
 @theme{
     --color-main:#F5F7FA;
