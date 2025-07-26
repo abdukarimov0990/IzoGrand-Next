@@ -2,12 +2,15 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import express from 'express'
+import fs from 'fs'
+import { join } from 'path'
 import { Telegraf, Scenes, session } from 'telegraf'
 import axios from 'axios'
 import { db } from '../lib/firebase.js'
 import { uploadToImgBB } from '../lib/uploadToImgBB.js'
-import { collection, addDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, where, limit, doc, deleteDoc } from 'firebase/firestore'
 
+// Bot setup
 const bot = new Telegraf(process.env.BOT_TOKEN)
 const adminIds = (process.env.ADMINS || '')
   .split(',')
@@ -30,6 +33,7 @@ const sanitizeData = (obj) => {
   return cleaned
 }
 
+// ================= ADD SCENE ===================
 const addScene = new Scenes.WizardScene(
   'add-scene',
 
@@ -143,12 +147,84 @@ const addScene = new Scenes.WizardScene(
   }
 )
 
-const stage = new Scenes.Stage([addScene])
+// ================= DELETE SCENE ===================
+const deleteScene = new Scenes.WizardScene(
+  'delete-scene',
+
+  async (ctx) => {
+    if (!adminIds.includes(String(ctx.from.id))) {
+      return ctx.reply("❌ Sizda ruxsat yo'q.")
+    }
+
+    await ctx.reply("🔸 Nima o'chirmoqchisiz?", {
+      reply_markup: {
+        keyboard: [['product'], ['work']],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+      },
+    })
+    return ctx.wizard.next()
+  },
+
+  async (ctx) => {
+    const type = ctx.message?.text?.toLowerCase()
+    if (!['product', 'work'].includes(type)) {
+      return ctx.reply("❗ Faqat 'product' yoki 'work' tanlang.")
+    }
+    ctx.wizard.state.type = type
+    await ctx.reply("📝 O'chirmoqchi bo'lgan element nomini yozing:")
+    return ctx.wizard.next()
+  },
+
+  async (ctx) => {
+    const name = ctx.message?.text?.trim()
+    if (!name) return ctx.reply('❗ Iltimos, nom kiriting.')
+
+    try {
+      const colName = ctx.wizard.state.type === 'product' ? 'products' : 'works'
+      const colRef = collection(db, colName)
+
+      const q = query(colRef, where('name', '==', name), limit(1))
+      const snapshot = await getDocs(q)
+
+      if (snapshot.empty) {
+        return ctx.reply("❌ Bunday nomli element topilmadi.")
+      }
+
+      const docId = snapshot.docs[0].id
+      await deleteDoc(doc(db, colName, docId))
+
+      await ctx.reply(`✅ ${ctx.wizard.state.type} "${name}" muvaffaqiyatli o'chirildi.`)
+    } catch (err) {
+      console.error('❌ O‘chirishda xatolik:', err)
+      await ctx.reply("❌ O'chirishda xatolik yuz berdi.")
+    }
+
+    return ctx.scene.leave()
+  }
+)
+
+// ================= BOT SETTINGS ===================
+const stage = new Scenes.Stage([addScene, deleteScene])
 bot.use(session())
 bot.use(stage.middleware())
 
-bot.start((ctx) => {
-  ctx.reply('👋 Assalomu alaykum!\n\n🛠 Ma\'lumot qo\'shish uchun /add buyrug\'idan foydalaning.')
+bot.start(async (ctx) => {
+  const username = ctx.from.username ? `@${ctx.from.username}` : ctx.from.first_name
+  const photoPath = join(__dirname, '../public/img/welcome.jpg')
+
+  try {
+    await ctx.replyWithPhoto({ source: fs.createReadStream(photoPath) })
+  } catch (err) {
+    console.warn('⚠️ Rasm topilmadi yoki o‘qib bo‘lmadi:', err.message)
+  }
+
+  await ctx.reply(
+    `✨️ Assalomu alaykum, ${username}!\n` +
+    `✅️ Ushbu bot izogrand.uz saytining admin paneli hisoblanadi.\n` +
+    `🚫 Faqat adminlar foydalanishi mumkin.\n` +
+    `👨‍💻 Adminmisiz? Unda /add yoki /delete buyrug'ini bering.`
+  )
 })
 
 bot.command('add', (ctx) => {
@@ -158,11 +234,18 @@ bot.command('add', (ctx) => {
   ctx.scene.enter('add-scene')
 })
 
+bot.command('delete', (ctx) => {
+  if (!adminIds.includes(String(ctx.from.id))) {
+    return ctx.reply("❌ Sizda ruxsat yo'q.")
+  }
+  ctx.scene.enter('delete-scene')
+})
+
 bot.launch().then(() => {
   console.log('🤖 Bot ishga tushdi. Firestore + ImgBB bilan ulandi.')
 })
 
-// ✅ Render uchun portga ulanish (Express bilan)
+// ================= EXPRESS SERVER ===================
 const app = express()
 const PORT = process.env.PORT || 3000
 app.get('/', (req, res) => {
