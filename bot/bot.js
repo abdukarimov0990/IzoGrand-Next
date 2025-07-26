@@ -1,7 +1,7 @@
-// ✅ Yangi, to'liq ishlaydigan bot.js fayli
 import dotenv from 'dotenv'
 dotenv.config()
 
+import express from 'express'
 import { Telegraf, Scenes, session } from 'telegraf'
 import axios from 'axios'
 import { db } from '../lib/firebase.js'
@@ -14,7 +14,6 @@ const adminIds = (process.env.ADMINS || '')
   .map(id => id.trim())
   .filter(Boolean)
 
-// 🔧 Ma'lumotni tozalovchi kuchliroq funksiya
 const sanitizeData = (obj) => {
   const cleaned = {}
   for (const [key, val] of Object.entries(obj)) {
@@ -161,4 +160,14 @@ bot.command('add', (ctx) => {
 
 bot.launch().then(() => {
   console.log('🤖 Bot ishga tushdi. Firestore + ImgBB bilan ulandi.')
+})
+
+// ✅ Render uchun portga ulanish (Express bilan)
+const app = express()
+const PORT = process.env.PORT || 3000
+app.get('/', (req, res) => {
+  res.send('🤖 Telegram bot ishlamoqda.')
+})
+app.listen(PORT, () => {
+  console.log(`🌐 Web server tinglamoqda: http://localhost:${PORT}`)
 })
