@@ -21,18 +21,22 @@ import {
   deleteDoc
 } from 'firebase/firestore'
 
+// Fayl yo‘lini aniqlash
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const welcomePhotoPath = path.join(__dirname, '../public/img/welcome.jpg')
 
+// Botni yaratish
 const bot = new Telegraf(process.env.BOT_TOKEN)
 const adminIds = (process.env.ADMINS || '')
   .split(',')
   .map(id => id.trim())
   .filter(Boolean)
 
+// Faqat adminlar uchun ruxsat
 const isAdmin = (ctx) => ctx.from && adminIds.includes(String(ctx.from.id))
 
+// Kiritilgan ma'lumotlarni tozalovchi funksiya
 const sanitizeData = (obj) => {
   const cleaned = {}
   for (const [key, val] of Object.entries(obj)) {
@@ -48,13 +52,14 @@ const sanitizeData = (obj) => {
   return cleaned
 }
 
+// Mahsulot yoki xizmat qo‘shish sahnasi
 const addScene = new Scenes.WizardScene(
   'add-scene',
   async (ctx) => {
     if (!isAdmin(ctx)) return ctx.reply('❌ Sizda ruxsat yo‘q.')
     await ctx.reply('🔸 Nima qo‘shmoqchisiz?', {
       reply_markup: {
-        keyboard: [['product'], ['work'], ['❌ Bekor qilish']],
+        keyboard: [['Mahsulot'], ['Xizmat'], ['❌ Bekor qilish']],
         resize_keyboard: true,
         one_time_keyboard: true,
       },
@@ -64,9 +69,10 @@ const addScene = new Scenes.WizardScene(
   async (ctx) => {
     if (ctx.message?.text === '❌ Bekor qilish') return cancelWizard(ctx)
     const type = ctx.message?.text?.toLowerCase()
-    if (!['product', 'work'].includes(type)) return ctx.reply("❗ Faqat 'product' yoki 'work' tanlang.")
-    ctx.wizard.state.type = type
-    await ctx.reply(`📝 ${type === 'product' ? 'Mahsulot' : 'Xizmat'} nomini yuboring:`)
+    if (!['mahsulot', 'xizmat'].includes(type)) return ctx.reply("❗ Faqat 'Mahsulot' yoki 'Xizmat' tanlang.")
+    ctx.wizard.state.displayType = type
+    ctx.wizard.state.type = type === 'mahsulot' ? 'product' : 'work'
+    await ctx.reply(`📝 ${type.charAt(0).toUpperCase() + type.slice(1)} nomini yuboring:`)
     return ctx.wizard.next()
   },
   async (ctx) => {
@@ -135,24 +141,25 @@ const addScene = new Scenes.WizardScene(
       const cleanItem = sanitizeData(item)
       const colRef = collection(db, ctx.wizard.state.type === 'product' ? 'products' : 'works')
       await addDoc(colRef, cleanItem)
-      await ctx.reply(`✅ ${ctx.wizard.state.type === 'product' ? 'Mahsulot' : 'Xizmat'} saqlandi.`, {
+      await ctx.reply(`✅ ${ctx.wizard.state.displayType.charAt(0).toUpperCase() + ctx.wizard.state.displayType.slice(1)} saqlandi.`, {
         reply_markup: { remove_keyboard: true },
       })
     } catch (err) {
-      console.error('❌ Firestore xatosi:', err)
+      console.error('❌ Bazaga yozishda xatolik:', err)
       await ctx.reply('❌ Bazaga yozishda xatolik yuz berdi.')
     }
     return ctx.scene.leave()
   }
 )
 
+// Mahsulot yoki xizmatni o‘chirish sahnasi
 const deleteScene = new Scenes.WizardScene(
   'delete-scene',
   async (ctx) => {
     if (!isAdmin(ctx)) return ctx.reply('❌ Sizda ruxsat yo‘q.')
     await ctx.reply('🔸 Nima o‘chirmoqchisiz?', {
       reply_markup: {
-        keyboard: [['product'], ['work'], ['❌ Bekor qilish']],
+        keyboard: [['Mahsulot'], ['Xizmat'], ['❌ Bekor qilish']],
         resize_keyboard: true,
         one_time_keyboard: true
       }
@@ -162,9 +169,10 @@ const deleteScene = new Scenes.WizardScene(
   async (ctx) => {
     if (ctx.message?.text === '❌ Bekor qilish') return cancelWizard(ctx)
     const type = ctx.message?.text?.toLowerCase()
-    if (!['product', 'work'].includes(type)) return ctx.reply("❗ Faqat 'product' yoki 'work' tanlang.")
-    ctx.wizard.state.type = type
-    await ctx.reply("📝 O‘chirmoqchi bo‘lgan element nomini yozing:")
+    if (!['mahsulot', 'xizmat'].includes(type)) return ctx.reply("❗ Faqat 'Mahsulot' yoki 'Xizmat' tanlang.")
+    ctx.wizard.state.displayType = type
+    ctx.wizard.state.type = type === 'mahsulot' ? 'product' : 'work'
+    await ctx.reply("📝 O‘chirmoqchi bo‘lgan nomni yuboring:")
     return ctx.wizard.next()
   },
   async (ctx) => {
@@ -178,7 +186,7 @@ const deleteScene = new Scenes.WizardScene(
       if (snapshot.empty) return ctx.reply("❌ Bunday nomli element topilmadi.")
       const docId = snapshot.docs[0].id
       await deleteDoc(doc(db, colName, docId))
-      await ctx.reply(`✅ ${ctx.wizard.state.type} "${name}" muvaffaqiyatli o‘chirildi.`, {
+      await ctx.reply(`✅ ${ctx.wizard.state.displayType.charAt(0).toUpperCase() + ctx.wizard.state.displayType.slice(1)} "${name}" muvaffaqiyatli o‘chirildi.`, {
         reply_markup: { remove_keyboard: true },
       })
     } catch (err) {
@@ -189,6 +197,7 @@ const deleteScene = new Scenes.WizardScene(
   }
 )
 
+// Bekor qilish funksiyasi
 const cancelWizard = async (ctx) => {
   await ctx.reply('❌ Amaliyot bekor qilindi.', {
     reply_markup: { remove_keyboard: true },
@@ -196,24 +205,25 @@ const cancelWizard = async (ctx) => {
   return ctx.scene.leave()
 }
 
+// Bot sahnalari
 const stage = new Scenes.Stage([addScene, deleteScene])
 bot.use(session())
 bot.use(stage.middleware())
 
+// /start komandasi
 bot.start(async (ctx) => {
   const name = ctx.from?.username ? `@${ctx.from.username}` : ctx.from?.first_name || 'Foydalanuvchi'
   try {
     await ctx.replyWithPhoto({ source: fs.createReadStream(welcomePhotoPath) })
   } catch {}
   await ctx.reply(
-    `
-✨️ Assalomu alaykum. ${name}
-✅️ Ushbu bot izogrand.uz saytining admin paneli hisoblanadi ! 
-🚫 Botdan faqat adminlar foydalana oladi .
-👨‍💻 Adminmisz ? Unda 
-➡️ <b>Buyruqlar:</b>
-- /add — Qo‘shish
-- /delete — O‘chirish
+    `✨️ Assalomu alaykum, ${name}
+✅️ Ushbu bot izogrand.uz saytining admin paneli hisoblanadi!
+🚫 Botdan faqat adminlar foydalana oladi.
+
+👨‍💻 Buyruqlar:
+- /add — Mahsulot yoki xizmat qo‘shish
+- /delete — Mahsulot yoki xizmatni o‘chirish
 - /menu — Menyu
 - /cancel — Bekor qilish`,
     {
@@ -226,6 +236,7 @@ bot.start(async (ctx) => {
   )
 })
 
+// Buyruqlar
 bot.command('add', (ctx) => isAdmin(ctx) ? ctx.scene.enter('add-scene') : ctx.reply('❌ Sizda ruxsat yo‘q.'))
 bot.command('delete', (ctx) => isAdmin(ctx) ? ctx.scene.enter('delete-scene') : ctx.reply('❌ Sizda ruxsat yo‘q.'))
 bot.command('cancel', cancelWizard)
@@ -246,15 +257,16 @@ bot.command('help', (ctx) => {
   ctx.reply(
     `🆘 <b>Yordam</b>
 
-1. <b>/add</b> — mahsulot yoki xizmat qo‘shish.
-2. <b>/delete</b> — mahsulot yoki xizmatni o‘chirish.
-3. <b>/menu</b> — barcha buyruqlar ro‘yxati.
+1. <b>/add</b> — Mahsulot yoki xizmat qo‘shish.
+2. <b>/delete</b> — Mahsulot yoki xizmatni o‘chirish.
+3. <b>/menu</b> — Asosiy buyruqlar ro‘yxati.
 
-⚠️ Eslatma: faqat <b>adminlar</b> foydalanishi mumkin.`,
+⚠️ Faqat <b>adminlar</b> foydalanishi mumkin.`,
     { parse_mode: 'HTML' }
   )
 })
 
+// Express serverni ishga tushirish
 const app = express()
 const PORT = process.env.PORT || 3000
 app.use(bot.webhookCallback('/bot'))
