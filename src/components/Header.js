@@ -46,7 +46,7 @@ const Header = () => {
       <div className="container py-4 flex justify-between items-center gap-4 px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <img src="public/img/IzoLogo.png" alt="Logo" className="w-[90px]" />
+          <img src="/img/izoLogo.png" alt="Logo" className="w-[90px]" />
         </Link>
 
         {/* Desktop Search */}

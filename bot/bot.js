@@ -54,7 +54,6 @@ const sanitizeData = (obj) => {
 // ================= ADD SCENE ===================
 const addScene = new Scenes.WizardScene(
   'add-scene',
-
   async (ctx) => {
     if (!adminIds.includes(String(ctx.from.id))) {
       return ctx.reply('❌ Sizda ruxsat yo\'q.')
@@ -168,7 +167,6 @@ const addScene = new Scenes.WizardScene(
 // ================= DELETE SCENE ===================
 const deleteScene = new Scenes.WizardScene(
   'delete-scene',
-
   async (ctx) => {
     if (!adminIds.includes(String(ctx.from.id))) {
       return ctx.reply("❌ Sizda ruxsat yo'q.")
@@ -258,16 +256,19 @@ bot.command('delete', (ctx) => {
   ctx.scene.enter('delete-scene')
 })
 
-bot.launch().then(() => {
-  console.log('🤖 Bot ishga tushdi. Firestore + ImgBB bilan ulandi.')
-})
-
-// ================= EXPRESS SERVER ===================
+// ================= EXPRESS + WEBHOOK ===================
 const app = express()
 const PORT = process.env.PORT || 3000
+
+app.use(bot.webhookCallback('/bot'))
+
+// Webhook ulash (TOKEN orqali)
+bot.telegram.setWebhook(`https://izogrand-next.onrender.com/bot`)
+
 app.get('/', (req, res) => {
   res.send('🤖 Telegram bot ishlamoqda.')
 })
+
 app.listen(PORT, () => {
   console.log(`🌐 Web server tinglamoqda: http://localhost:${PORT}`)
 })
