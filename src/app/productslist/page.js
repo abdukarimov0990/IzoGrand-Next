@@ -54,7 +54,7 @@ const ProductList = () => {
         {products.slice(0, visibleCount).map((product, index) => {
           const isLiked = selectedProducts?.some(p => p._id === product._id)
           return (
-            <li key={product._id || index} className="border border-gray-200 rounded-lg shadow-sm">
+            <li key={product._id || index} className="border bor  der-gray-200 rounded-lg shadow-sm">
               <div className="relative">
                   <button
                   className="absolute right-3 top-2 text-red-600 z-10"
