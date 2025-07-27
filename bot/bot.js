@@ -206,9 +206,11 @@ bot.start(async (ctx) => {
     await ctx.replyWithPhoto({ source: fs.createReadStream(welcomePhotoPath) })
   } catch {}
   await ctx.reply(
-    `👋 Salom, ${name}!
-🤖 Bu bot — adminlar uchun mo‘ljallangan.
-
+    `
+✨️ Assalomu alaykum. ${name}
+✅️ Ushbu bot izogrand.uz saytining admin paneli hisoblanadi ! 
+🚫 Botdan faqat adminlar foydalana oladi .
+👨‍💻 Adminmisz ? Unda 
 ➡️ <b>Buyruqlar:</b>
 - /add — Qo‘shish
 - /delete — O‘chirish
