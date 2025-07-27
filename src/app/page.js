@@ -14,6 +14,7 @@ import { MdKeyboardArrowRight, MdKeyboardArrowLeft } from 'react-icons/md'
 import Link from 'next/link'
 import { AppContext } from '../context/AppContext'
 import { FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from 'react-icons/fa'
+import Head from 'next/head'
 
 const Home = () => {
   const { selectedProducts, setSelectedProducts } = useContext(AppContext)
@@ -63,6 +64,19 @@ const Home = () => {
 
   return (
     <>
+          <Head>
+        <title>GAVHARGO — Qurilish mahsulotlari va xizmatlar O‘zbekiston bo‘ylab</title>
+        <meta name="description" content="GAVHARGO — O‘zbekiston bo‘ylab tez yetkazib beriladigan qurilish mahsulotlari va xizmatlar onlayn do‘koni." />
+        <meta name="keywords" content="qurilish, mahsulotlar, xizmatlar, O‘zbekiston, yetkazib berish, onlayn do‘kon" />
+        <meta name="author" content="GAVHARGO" />
+        <meta property="og:title" content="GAVHARGO — Qurilish mahsulotlari va xizmatlar" />
+        <meta property="og:description" content="Tez va ishonchli qurilish mahsulotlari va xizmatlar O‘zbekiston bo‘ylab." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sizningsaytingiz.uz/" />
+        <meta property="og:image" content="https://sizningsaytingiz.uz/preview-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Head>
+
       {/* Banner section */}
       <section className='py-5'>
         <div className="container">

@@ -152,6 +152,8 @@ const addScene = new Scenes.WizardScene(
   }
 )
 
+// Qolgan kodingizga hozircha o‘zgartirish kiritilmadi, agar xohlasangiz delete-scene yoki boshqa joylarga ham slug asosida izlash qo‘shish mumkin.
+
 // Mahsulot yoki xizmatni o‘chirish sahnasi
 const deleteScene = new Scenes.WizardScene(
   'delete-scene',

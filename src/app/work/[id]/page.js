@@ -15,6 +15,7 @@ import { db } from '../../../../lib/firebase'
 import { FaArrowLeft, FaHome } from 'react-icons/fa'
 import Link from 'next/link'
 
+
 const Product = () => {
   const { id } = useParams()
   const { selectedProducts, setSelectedProducts } = useContext(AppContext)
