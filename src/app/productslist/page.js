@@ -48,12 +48,6 @@ const ProductList = () => {
 
   return (
     <div className='container'>
-            <Link href="/" className='pt-10 mb-5'>
-        <button className="flex items-center gap-2 py-2 px-5 border border-gray-300 text-gray-600 rounded-lg transition hover:bg-gray-100 hover:text-black hover:shadow-sm">
-          <FaHome size={24} />
-          <span>Bosh sahifa</span>
-        </button>
-      </Link>
     <div className="container mx-auto px-4 py-10">
 
       <ul className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 lg:gap-6">

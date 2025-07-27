@@ -1,16 +1,34 @@
+// ================= MODULLAR ===================
 import dotenv from 'dotenv'
 dotenv.config()
 
 import express from 'express'
 import fs from 'fs'
-import { join } from 'path'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { Telegraf, Scenes, session } from 'telegraf'
 import axios from 'axios'
 import { db } from '../lib/firebase.js'
 import { uploadToImgBB } from '../lib/uploadToImgBB.js'
-import { collection, addDoc, getDocs, query, where, limit, doc, deleteDoc } from 'firebase/firestore'
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  limit,
+  doc,
+  deleteDoc
+} from 'firebase/firestore'
 
-// Bot setup
+// ================= __dirname YARATISH ===================
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// ================= PATH - WELCOME RASM ===================
+const welcomePhotoPath = path.join(__dirname, '../public/img/welcome.jpg')
+
+// ================= BOT O'RINATISH ===================
 const bot = new Telegraf(process.env.BOT_TOKEN)
 const adminIds = (process.env.ADMINS || '')
   .split(',')
@@ -211,10 +229,9 @@ bot.use(stage.middleware())
 
 bot.start(async (ctx) => {
   const username = ctx.from.username ? `@${ctx.from.username}` : ctx.from.first_name
-  const photoPath = join(__dirname, '../public/img/welcome.jpg')
 
   try {
-    await ctx.replyWithPhoto({ source: fs.createReadStream(photoPath) })
+    await ctx.replyWithPhoto({ source: fs.createReadStream(welcomePhotoPath) })
   } catch (err) {
     console.warn('⚠️ Rasm topilmadi yoki o‘qib bo‘lmadi:', err.message)
   }

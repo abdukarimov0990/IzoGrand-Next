@@ -117,7 +117,7 @@ export const products = [
 ]
 
 export const banner = [
-  { img: "/img/banner1.jfif" },
+  { img: "/img/banner1.png" },
   { img: "/img/banner2.webp" },
   { img: "/img/banner3.jfif" },
   { img: "/img/banner4.jfif" },
