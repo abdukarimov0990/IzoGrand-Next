@@ -11,7 +11,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-10 flex flex-col md:flex-row justify-between items-center gap-6">
         {/* Logo va nom */}
         <div className="flex items-center gap-3">
-          <Image src="/img/izoLogo.png" alt="Logo" width="90" height="10" />
+          <Image src="/img/IzoLogo.png" alt="Logo" width="90" height="10" />
           <p className="text-gray-600 text-sm">© 2025 Izo. Barcha huquqlar himoyalangan.</p>
         </div>
 
