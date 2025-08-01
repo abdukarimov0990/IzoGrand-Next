@@ -65,7 +65,7 @@ const Home = () => {
   return (
     <>
           <Head>
-        <title>GAVHARGO — Qurilish mahsulotlari va xizmatlar O‘zbekiston bo‘ylab</title>
+        <title>GAVHARGO—Qurilish mahsulotlari va xizmatlar O‘zbekiston bo‘ylab</title>
         <meta name="description" content="GAVHARGO — O‘zbekiston bo‘ylab tez yetkazib beriladigan qurilish mahsulotlari va xizmatlar onlayn do‘koni." />
         <meta name="keywords" content="qurilish, mahsulotlar, xizmatlar, O‘zbekiston, yetkazib berish, onlayn do‘kon" />
         <meta name="author" content="GAVHARGO" />
