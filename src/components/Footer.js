@@ -5,7 +5,6 @@ import { FaInstagram, FaTelegramPlane, FaPhoneAlt } from 'react-icons/fa';
 import Link from 'next/link';
 import Image from 'next/image';
 
-
 const Footer = () => {
   return (
     <footer className="bg-white border-t shadow-sm mt-10">
