@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useContext } from 'react';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { HiHeart } from 'react-icons/hi';
 import { PiPhoneFill } from 'react-icons/pi';
@@ -46,7 +47,7 @@ const Header = () => {
       <div className="container py-4 flex justify-between items-center gap-4 px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <img src="/img/izoLogo.png" alt="Logo" className="w-[90px]" />
+          <Image src="/img/izoLogo.png" alt="Logo" width="90" height="10" />
         </Link>
 
         {/* Desktop Search */}
